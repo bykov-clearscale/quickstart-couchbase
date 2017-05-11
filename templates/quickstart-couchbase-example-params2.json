@@ -1,18 +1,30 @@
 [
     {
-        "ParameterKey": "Parameter1",
-        "ParameterValue": "Value1"
+        "ParameterKey": "Username",
+        "ParameterValue": "couchbase"
     },
     {
-        "ParameterKey": "Parameter2",
-        "ParameterValue": "Value2"
+        "ParameterKey": "Password",
+        "ParameterValue": "foo123!"
     },
     {
-        "ParameterKey": "Parameter3",
-        "ParameterValue": "Value3"
+        "ParameterKey": "KeyName",
+        "ParameterValue": "myKeyName"
     },
     {
-        "ParameterKey": "Parameter4",
-        "ParameterValue": "Value4"
+        "ParameterKey": "InstanceType",
+        "ParameterValue": "m4.xlarge"
+    },
+    {
+        "ParameterKey": "InstanceCount",
+        "ParameterValue": 5
+    },
+    {
+        "ParameterKey": "DiskSize",
+        "ParameterValue": 100
+    },
+    {
+        "ParameterKey": "RemoteAccessCIDR",
+        "ParameterValue": "0.0.0.0/0"
     }
 ]
