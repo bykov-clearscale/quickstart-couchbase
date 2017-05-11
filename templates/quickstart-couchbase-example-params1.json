@@ -1,18 +1,14 @@
 [
     {
-        "ParameterKey": "Parameter1",
-        "ParameterValue": "Value1"
+        "ParameterKey": "Username",
+        "ParameterValue": "couchbase"
     },
     {
-        "ParameterKey": "Parameter2",
-        "ParameterValue": "Value2"
+        "ParameterKey": "Password",
+        "ParameterValue": "foo123!"
     },
     {
-        "ParameterKey": "Parameter3",
-        "ParameterValue": "Value3"
-    },
-    {
-        "ParameterKey": "Parameter4",
-        "ParameterValue": "Value4"
+        "ParameterKey": "KeyName",
+        "ParameterValue": "myKeyName"
     }
 ]

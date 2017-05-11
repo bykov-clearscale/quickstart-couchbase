@@ -1,0 +1,156 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "AWS Deployment for Couchbase Enterprise",
+  "Parameters": {
+    "Username": {
+      "Description": "Username for Couchbase administrator",
+      "Type": "String"
+    },
+    "Password": {
+      "Description": "Password for Couchbase administrator",
+      "Type": "String",
+      "NoEcho": true
+    },
+    "KeyName": {
+      "Description": "Name of an existing EC2 KeyPair",
+      "Type": "AWS::EC2::KeyPair::KeyName"
+    },
+    "InstanceType": {
+      "Description": "Instance type for Couchbase Nodes",
+      "Type": "String",
+      "Default": "m4.xlarge"
+    },
+    "InstanceCount": {
+      "Description": "Number of Couchbase Nodes",
+      "Type": "Number",
+      "Default": 5
+    },
+    "DiskSize": {
+      "Description": "Size in GB of the EBS gp2 volume on each Couchbase node",
+      "Type": "Number",
+      "Default": 100
+
+    },
+    "RemoteAccessCIDR": {
+      "Description": "CIDR for SSH and Couchbase administrator access",
+      "Type": "String",
+      "MinLength": 9,
+      "MaxLength": 18,
+      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+      "ConstraintDescription": "must be a valid CIDR range of the form x.x.x.x/x.",
+      "Default" : "0.0.0.0/0"
+    }
+  },
+  "Mappings": {
+    "CouchbaseAMI": {
+      "us-east-1": { "AMI": "ami-c58c1dd3" },
+      "us-east-2": { "AMI": "ami-4191b524" }
+    }
+  },
+  "Resources": {
+    "CouchbaseAutoScalingGroup": {
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "Properties": {
+        "AvailabilityZones": { "Fn::GetAZs": "" },
+        "LaunchConfigurationName": { "Ref": "CouchbaseLaunchConfiguration" },
+        "MinSize": { "Ref": "InstanceCount" },
+        "MaxSize": { "Ref": "InstanceCount" },
+        "DesiredCapacity": { "Ref": "InstanceCount" }
+      }
+    },
+    "CouchbaseLaunchConfiguration": {
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "Properties": {
+        "ImageId": { "Fn::FindInMap": [ "CouchbaseAMI", { "Ref": "AWS::Region" }, "AMI" ] },
+        "InstanceType": { "Ref": "InstanceType" },
+        "SecurityGroups": [ { "Ref": "CouchbaseSecurityGroup" } ],
+        "KeyName": { "Ref": "KeyName" },
+        "EbsOptimized": true,
+        "IamInstanceProfile": { "Ref": "CouchbaseInstanceProfile" },
+        "BlockDeviceMappings":
+        [
+          {
+            "DeviceName" : "/dev/sdk",
+            "Ebs" : {
+              "VolumeSize": { "Ref": "DiskSize" },
+              "VolumeType": "gp2"
+            }
+          }
+        ],
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [ "",
+              [
+                "#!/bin/bash\n",
+                "cd /tmp\n",
+                "wget https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64 -O /bin/jq\n",
+                "chmod +x /bin/jq\n",
+                "wget https://packages.couchbase.com/releases/4.6.1/couchbase-server-enterprise-4.6.1-centos6.x86_64.rpm\n",
+                "wget https://raw.githubusercontent.com/aws-quickstart/quickstart-couchbase/master/scripts/node.sh\n",
+                "wget https://raw.githubusercontent.com/aws-quickstart/quickstart-couchbase/master/scripts/format.sh\n",
+                "wget https://raw.githubusercontent.com/aws-quickstart/quickstart-couchbase/master/scripts/install.sh\n",
+                "wget https://raw.githubusercontent.com/aws-quickstart/quickstart-couchbase/master/scripts/configure.sh\n",
+                "chmod +x *.sh\n",
+                "./node.sh ", { "Ref": "Username" }, " '", { "Ref": "Password" }, "'\n"
+              ]
+            ]
+          }
+        }
+      }
+    },
+    "CouchbaseInstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {"Roles": [{"Ref": "CouchbaseRole"}]}
+    },
+    "CouchbaseRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {"Service": ["ec2.amazonaws.com"]},
+              "Action": ["sts:AssumeRole"]
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "CouchbasePolicy",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ec2:DescribeInstances",
+                    "autoscaling:DescribeAutoScalingGroups"
+                  ],
+                  "Resource": "*"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "CouchbaseSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription" : "Enable SSH and Couchbase Ports",
+        "SecurityGroupIngress": [
+          { "IpProtocol": "tcp", "FromPort": 22, "ToPort": 22, "CidrIp": { "Ref": "RemoteAccessCIDR" } },
+          { "IpProtocol": "tcp", "FromPort": 8091, "ToPort": 8091, "CidrIp": { "Ref": "RemoteAccessCIDR" } },
+          { "IpProtocol": "tcp", "FromPort": 8092, "ToPort": 8094, "CidrIp": "0.0.0.0/0" },
+          { "IpProtocol": "tcp", "FromPort": 9100, "ToPort": 9105, "CidrIp": "0.0.0.0/0" },
+          { "IpProtocol": "tcp", "FromPort": 9998, "ToPort": 9998, "CidrIp": "0.0.0.0/0" },
+          { "IpProtocol": "tcp", "FromPort": 11207, "ToPort": 11215, "CidrIp": "0.0.0.0/0" },
+          { "IpProtocol": "tcp", "FromPort": 18091, "ToPort": 18093, "CidrIp": "0.0.0.0/0" },
+          { "IpProtocol": "tcp", "FromPort": 4369, "ToPort": 4369, "CidrIp": "0.0.0.0/0" },
+          { "IpProtocol": "tcp", "FromPort": 21100, "ToPort": 21299, "CidrIp": "0.0.0.0/0" }
+        ]
+      }
+    }
+  }
+}
