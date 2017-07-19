@@ -1,11 +1,16 @@
 #!/usr/bin/env bash
 
-echo "Running configure.sh"
+echo "Running configureServer.sh"
 
 adminUsername=$1
 adminPassword=$2
 
+echo "Using the settings:"
+echo adminUsername \'$adminUsername\'
+echo adminPassword \'$adminPassword\'
+
 # This is all to figure out what our rally point is.  There might be a much better way to do this.
+yum -y install jq
 
 region=$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document \
   | jq '.region'  \
@@ -34,6 +39,7 @@ rallyPublicDNS=$(aws ec2 describe-instances \
     --query  'Reservations[0].Instances[0].NetworkInterfaces[0].Association.PublicDnsName' \
     --instance-ids ${rallyInstanceID} \
     --output text)
+echo rallyPublicDNS ${rallyPublicDNS}
 
 nodePublicDNS=`curl http://169.254.169.254/latest/meta-data/public-hostname`
 
@@ -74,6 +80,15 @@ then
     --cluster-ramsize=$dataRAM \
     --cluster-index-ramsize=$indexRAM \
     --services=data,index,query,fts
+
+    echo "Running couchbase-cli bucket-create"
+  ./couchbase-cli bucket-create \
+    --cluster=$nodePublicDNS \
+    --user=$adminUsername \
+    --pass=$adminPassword \
+    --bucket=sync_gateway \
+    --bucket-type=couchbase \
+    --bucket-ramsize=$dataRAM
 else
   echo "Running couchbase-cli server-add"
   output=""
