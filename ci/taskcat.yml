@@ -20,8 +20,8 @@ global:
   reporting: true
  
 tests:
-  couchbase-master:
-    parameter_input: quickstart-couchbase-input.json
-    template_file: quickstart-couchbase-master.template
+  couchbase-novpc:
+    parameter_input: couchbase-novpc.json
+    template_file: couchbase.template
     regions:
      - us-east-1
