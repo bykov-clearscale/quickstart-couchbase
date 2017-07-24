@@ -38,69 +38,120 @@
   },
   "Mappings": {
     "CouchbaseAMI": {
-      "us-east-1": { "AMI": "ami-c58c1dd3" },
-      "us-east-2": { "AMI": "ami-4191b524" },
-      "us-west-1": { "AMI": "ami-7a85a01a" },
-      "us-west-2": { "AMI": "ami-4836a428" },
-      "ca-central-1": { "AMI": "ami-0bd66a6f" },
-      "eu-central-1": { "AMI": "ami-b968bad6" },
-      "eu-west-1": { "AMI": "ami-01ccc867" },
-      "eu-west-2": { "AMI": "ami-b6daced2" },
-      "ap-southeast-1": { "AMI": "ami-fc5ae39f" },
-      "ap-southeast-2": { "AMI": "ami-162c2575" },
-      "ap-south-1": { "AMI": "ami-52c7b43d" },
-      "ap-northeast-1": { "AMI": "ami-923d12f5" },
-      "ap-northeast-2": { "AMI": "ami-9d15c7f3" },
-      "sa-east-1": { "AMI": "ami-37cfad5b" }
+      "us-east-1": {
+        "AMI": "ami-c58c1dd3"
+      },
+      "us-east-2": {
+        "AMI": "ami-4191b524"
+      },
+      "us-west-1": {
+        "AMI": "ami-7a85a01a"
+      },
+      "us-west-2": {
+        "AMI": "ami-4836a428"
+      },
+      "ca-central-1": {
+        "AMI": "ami-0bd66a6f"
+      },
+      "eu-central-1": {
+        "AMI": "ami-b968bad6"
+      },
+      "eu-west-1": {
+        "AMI": "ami-01ccc867"
+      },
+      "eu-west-2": {
+        "AMI": "ami-b6daced2"
+      },
+      "ap-southeast-1": {
+        "AMI": "ami-fc5ae39f"
+      },
+      "ap-southeast-2": {
+        "AMI": "ami-162c2575"
+      },
+      "ap-south-1": {
+        "AMI": "ami-52c7b43d"
+      },
+      "ap-northeast-1": {
+        "AMI": "ami-923d12f5"
+      },
+      "ap-northeast-2": {
+        "AMI": "ami-9d15c7f3"
+      },
+      "sa-east-1": {
+        "AMI": "ami-37cfad5b"
+      }
     }
   },
   "Resources": {
     "ServerAutoScalingGroup": {
       "Type": "AWS::AutoScaling::AutoScalingGroup",
       "Properties": {
-        "AvailabilityZones": { "Fn::GetAZs": "" },
-        "LaunchConfigurationName": { "Ref": "ServerLaunchConfiguration" },
-        "MinSize": { "Ref": "ServerInstanceCount" },
-        "MaxSize": { "Ref": "ServerInstanceCount" },
-        "DesiredCapacity": { "Ref": "ServerInstanceCount" }
+        "AvailabilityZones": {
+          "Fn::GetAZs": ""
+        },
+        "LaunchConfigurationName": {
+          "Ref": "ServerLaunchConfiguration"
+        },
+        "MinSize": {
+          "Ref": "ServerInstanceCount"
+        },
+        "MaxSize": {
+          "Ref": "ServerInstanceCount"
+        },
+        "DesiredCapacity": {
+          "Ref": "ServerInstanceCount"
+        }
       }
     },
     "ServerLaunchConfiguration": {
       "Type": "AWS::AutoScaling::LaunchConfiguration",
       "Properties": {
-        "ImageId": { "Fn::FindInMap": [ "CouchbaseAMI", { "Ref": "AWS::Region" }, "AMI" ] },
-        "InstanceType": { "Ref": "InstanceType" },
-        "SecurityGroups": [ { "Ref": "CouchbaseSecurityGroup" } ],
-        "KeyName": { "Ref": "KeyName" },
+        "ImageId": {
+          "Fn::FindInMap": ["CouchbaseAMI", {
+            "Ref": "AWS::Region"
+          }, "AMI"]
+        },
+        "InstanceType": {
+          "Ref": "InstanceType"
+        },
+        "SecurityGroups": [{
+          "Ref": "CouchbaseSecurityGroup"
+        }],
+        "KeyName": {
+          "Ref": "KeyName"
+        },
         "EbsOptimized": true,
-        "IamInstanceProfile": { "Ref": "CouchbaseInstanceProfile" },
-        "BlockDeviceMappings":
-        [
-          {
-            "DeviceName" : "/dev/sdk",
-            "Ebs" : {
-              "VolumeSize": { "Ref": "ServerDiskSize" },
-              "VolumeType": "gp2"
-            }
+        "IamInstanceProfile": {
+          "Ref": "CouchbaseInstanceProfile"
+        },
+        "BlockDeviceMappings": [{
+          "DeviceName": "/dev/sdk",
+          "Ebs": {
+            "VolumeSize": {
+              "Ref": "ServerDiskSize"
+            },
+            "VolumeType": "gp2"
           }
-        ],
+        }],
         "UserData": {
           "Fn::Base64": {
-            "Fn::Join": [ "",
-              [
-                "#!/bin/bash\n",
-                "echo 'Running startup script...'\n",
-                "adminUsername=", { "Ref": "Username" }, "\n",
-                "adminPassword=", { "Ref": "Password" }, "\n",
-                "baseURL=https://raw.githubusercontent.com/aws-quickstart/quickstart-couchbase/master/scripts/\n",
-                "wget ${baseURL}server.sh\n",
-                "wget ${baseURL}format.sh\n",
-                "wget ${baseURL}installServer.sh\n",
-                "wget ${baseURL}configureServer.sh\n",
-                "chmod +x *.sh\n",
-                "./server.sh ${adminUsername} ${adminPassword}\n"
-              ]
-            ]
+            "Fn::Join": ["", [
+              "#!/bin/bash\n",
+              "echo 'Running startup script...'\n",
+              "adminUsername=", {
+                "Ref": "Username"
+              }, "\n",
+              "adminPassword=", {
+                "Ref": "Password"
+              }, "\n",
+              "baseURL=https://raw.githubusercontent.com/aws-quickstart/quickstart-couchbase/master/scripts/\n",
+              "wget ${baseURL}server.sh\n",
+              "wget ${baseURL}format.sh\n",
+              "wget ${baseURL}installServer.sh\n",
+              "wget ${baseURL}configureServer.sh\n",
+              "chmod +x *.sh\n",
+              "./server.sh ${adminUsername} ${adminPassword}\n"
+            ]]
           }
         }
       }
@@ -108,92 +159,147 @@
     "SyncGatewayAutoScalingGroup": {
       "Type": "AWS::AutoScaling::AutoScalingGroup",
       "Properties": {
-        "AvailabilityZones": { "Fn::GetAZs": "" },
-        "LaunchConfigurationName": { "Ref": "SyncGatewayLaunchConfiguration" },
-        "MinSize": { "Ref": "SyncGatewayInstanceCount" },
-        "MaxSize": { "Ref": "SyncGatewayInstanceCount" },
-        "DesiredCapacity": { "Ref": "SyncGatewayInstanceCount" }
+        "AvailabilityZones": {
+          "Fn::GetAZs": ""
+        },
+        "LaunchConfigurationName": {
+          "Ref": "SyncGatewayLaunchConfiguration"
+        },
+        "MinSize": {
+          "Ref": "SyncGatewayInstanceCount"
+        },
+        "MaxSize": {
+          "Ref": "SyncGatewayInstanceCount"
+        },
+        "DesiredCapacity": {
+          "Ref": "SyncGatewayInstanceCount"
+        }
       }
     },
     "SyncGatewayLaunchConfiguration": {
       "Type": "AWS::AutoScaling::LaunchConfiguration",
       "Properties": {
-        "ImageId": { "Fn::FindInMap": [ "CouchbaseAMI", { "Ref": "AWS::Region" }, "AMI" ] },
-        "InstanceType": { "Ref": "InstanceType" },
-        "SecurityGroups": [ { "Ref": "CouchbaseSecurityGroup" } ],
-        "KeyName": { "Ref": "KeyName" },
+        "ImageId": {
+          "Fn::FindInMap": ["CouchbaseAMI", {
+            "Ref": "AWS::Region"
+          }, "AMI"]
+        },
+        "InstanceType": {
+          "Ref": "InstanceType"
+        },
+        "SecurityGroups": [{
+          "Ref": "CouchbaseSecurityGroup"
+        }],
+        "KeyName": {
+          "Ref": "KeyName"
+        },
         "EbsOptimized": true,
-        "IamInstanceProfile": { "Ref": "CouchbaseInstanceProfile" },
+        "IamInstanceProfile": {
+          "Ref": "CouchbaseInstanceProfile"
+        },
         "UserData": {
           "Fn::Base64": {
-            "Fn::Join": [ "",
-              [
-                "#!/bin/bash\n",
-                "echo 'Running startup script...'\n",
-                "baseURL=https://raw.githubusercontent.com/aws-quickstart/quickstart-couchbase/master/scripts/\n",
-                "wget ${baseURL}syncGateway.sh\n",
-                "wget ${baseURL}installSyncGateway.sh\n",
-                "wget ${baseURL}configureSyncGateway.sh\n",
-                "chmod +x *.sh\n",
-                "./syncGateway.sh\n"
-              ]
-            ]
+            "Fn::Join": ["", [
+              "#!/bin/bash\n",
+              "echo 'Running startup script...'\n",
+              "baseURL=https://raw.githubusercontent.com/aws-quickstart/quickstart-couchbase/master/scripts/\n",
+              "wget ${baseURL}syncGateway.sh\n",
+              "wget ${baseURL}installSyncGateway.sh\n",
+              "wget ${baseURL}configureSyncGateway.sh\n",
+              "chmod +x *.sh\n",
+              "./syncGateway.sh\n"
+            ]]
           }
         }
       }
     },
     "CouchbaseInstanceProfile": {
       "Type": "AWS::IAM::InstanceProfile",
-      "Properties": {"Roles": [{"Ref": "CouchbaseRole"}]}
+      "Properties": {
+        "Roles": [{
+          "Ref": "CouchbaseRole"
+        }]
+      }
     },
     "CouchbaseRole": {
       "Type": "AWS::IAM::Role",
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Version": "2012-10-17",
-          "Statement": [
-            {
-              "Effect": "Allow",
-              "Principal": {"Service": ["ec2.amazonaws.com"]},
-              "Action": ["sts:AssumeRole"]
-            }
-          ]
+          "Statement": [{
+            "Effect": "Allow",
+            "Principal": {
+              "Service": ["ec2.amazonaws.com"]
+            },
+            "Action": ["sts:AssumeRole"]
+          }]
         },
-        "Policies": [
-          {
-            "PolicyName": "CouchbasePolicy",
-            "PolicyDocument": {
-              "Version": "2012-10-17",
-              "Statement": [
-                {
-                  "Effect": "Allow",
-                  "Action": [
-                    "ec2:DescribeInstances",
-                    "autoscaling:DescribeAutoScalingGroups"
-                  ],
-                  "Resource": "*"
-                }
-              ]
-            }
+        "Policies": [{
+          "PolicyName": "CouchbasePolicy",
+          "PolicyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [{
+              "Effect": "Allow",
+              "Action": [
+                "ec2:DescribeInstances",
+                "autoscaling:DescribeAutoScalingGroups"
+              ],
+              "Resource": "*"
+            }]
           }
-        ]
+        }]
       }
     },
     "CouchbaseSecurityGroup": {
       "Type": "AWS::EC2::SecurityGroup",
       "Properties": {
-        "GroupDescription" : "Enable SSH and Couchbase Ports",
-        "SecurityGroupIngress": [
-          { "IpProtocol": "tcp", "FromPort": 22, "ToPort": 22, "CidrIp": "0.0.0.0/0" },
-          { "IpProtocol": "tcp", "FromPort": 4369, "ToPort": 4369, "CidrIp": "0.0.0.0/0" },
-          { "IpProtocol": "tcp", "FromPort": 4984, "ToPort": 4985, "CidrIp": "0.0.0.0/0" },
-          { "IpProtocol": "tcp", "FromPort": 8091, "ToPort": 8094, "CidrIp": "0.0.0.0/0" },
-          { "IpProtocol": "tcp", "FromPort": 9100, "ToPort": 9105, "CidrIp": "0.0.0.0/0" },
-          { "IpProtocol": "tcp", "FromPort": 9998, "ToPort": 9999, "CidrIp": "0.0.0.0/0" },
-          { "IpProtocol": "tcp", "FromPort": 11207, "ToPort": 11215, "CidrIp": "0.0.0.0/0" },
-          { "IpProtocol": "tcp", "FromPort": 18091, "ToPort": 18093, "CidrIp": "0.0.0.0/0" },
-          { "IpProtocol": "tcp", "FromPort": 21100, "ToPort": 21299, "CidrIp": "0.0.0.0/0" }
-        ]
+        "GroupDescription": "Enable SSH and Couchbase Ports",
+        "SecurityGroupIngress": [{
+          "IpProtocol": "tcp",
+          "FromPort": 22,
+          "ToPort": 22,
+          "CidrIp": "0.0.0.0/0"
+        }, {
+          "IpProtocol": "tcp",
+          "FromPort": 4369,
+          "ToPort": 4369,
+          "CidrIp": "0.0.0.0/0"
+        }, {
+          "IpProtocol": "tcp",
+          "FromPort": 4984,
+          "ToPort": 4985,
+          "CidrIp": "0.0.0.0/0"
+        }, {
+          "IpProtocol": "tcp",
+          "FromPort": 8091,
+          "ToPort": 8094,
+          "CidrIp": "0.0.0.0/0"
+        }, {
+          "IpProtocol": "tcp",
+          "FromPort": 9100,
+          "ToPort": 9105,
+          "CidrIp": "0.0.0.0/0"
+        }, {
+          "IpProtocol": "tcp",
+          "FromPort": 9998,
+          "ToPort": 9999,
+          "CidrIp": "0.0.0.0/0"
+        }, {
+          "IpProtocol": "tcp",
+          "FromPort": 11207,
+          "ToPort": 11215,
+          "CidrIp": "0.0.0.0/0"
+        }, {
+          "IpProtocol": "tcp",
+          "FromPort": 18091,
+          "ToPort": 18093,
+          "CidrIp": "0.0.0.0/0"
+        }, {
+          "IpProtocol": "tcp",
+          "FromPort": 21100,
+          "ToPort": 21299,
+          "CidrIp": "0.0.0.0/0"
+        }]
       }
     }
   }
