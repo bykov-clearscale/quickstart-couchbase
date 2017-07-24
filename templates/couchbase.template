@@ -110,7 +110,9 @@
         "InstanceType": {
             "Description": "Instance type for Couchbase Nodes",
             "Type": "String",
-            "Default": "m4.xlarge"
+            "Default": "m4.xlarge",
+            "AllowedValues": [
+                "m4.xlarge"]
         },
         "Username": {
             "Description": "Username for Couchbase administrator",
