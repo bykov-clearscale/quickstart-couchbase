@@ -212,7 +212,24 @@
                     "Ref": "PublicSubnet1ID"
                 }, {
                     "Ref": "PublicSubnet2ID"
-                }]
+                }],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Join": [
+                                "-",
+                                [
+                                    {
+                                        "Ref": "AWS::StackName"
+                                    },
+                                    "couchbase-server"
+                                ]
+                            ]
+                        },
+                        "PropagateAtLaunch": "true"
+                    }
+                ]
             }
         },
         "ServerLaunchConfiguration": {
@@ -287,7 +304,24 @@
                     "Ref": "PublicSubnet1ID"
                 }, {
                     "Ref": "PublicSubnet2ID"
-                }]
+                }],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Join": [
+                                "-",
+                                [
+                                    {
+                                        "Ref": "AWS::StackName"
+                                    },
+                                    "couchbase-sync-gateway"
+                                ]
+                            ]
+                        },
+                        "PropagateAtLaunch": "true"
+                    }
+                ]
             }
         },
         "SyncGatewayLaunchConfiguration": {
