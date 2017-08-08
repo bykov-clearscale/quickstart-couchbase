@@ -193,9 +193,43 @@
         }
     },
     "Resources": {
+        "CouchbaseELB": {
+            "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+            "Properties": {
+                "Subnets": [{
+                    "Ref": "PublicSubnet1ID"
+                }, {
+                    "Ref": "PublicSubnet2ID"
+                }],
+                "Listeners": [{
+                    "LoadBalancerPort": "8091",
+                    "InstancePort": "8091",
+                    "Protocol": "HTTP"
+                }],
+                "SecurityGroups": [{
+                    "Ref": "CouchbaseSecurityGroup"
+                }],
+                "AppCookieStickinessPolicy": [{
+                    "CookieName": "couchbaseserver",
+                    "PolicyName": "WorkloadCookieStickinessPolicy"
+                }],
+                "HealthCheck": {
+                    "Target": "HTTP:8091/ui/index.html",
+                    "HealthyThreshold": "2",
+                    "UnhealthyThreshold": {
+                        "Ref": "ServerInstanceCount"
+                    },
+                    "Interval": "15",
+                    "Timeout": "3"
+                }
+            }
+        },
         "ServerAutoScalingGroup": {
             "Type": "AWS::AutoScaling::AutoScalingGroup",
             "Properties": {
+                "LoadBalancerNames": [{
+                    "Ref": "CouchbaseELB"
+                }],
                 "LaunchConfigurationName": {
                     "Ref": "ServerLaunchConfiguration"
                 },
@@ -213,23 +247,19 @@
                 }, {
                     "Ref": "PublicSubnet2ID"
                 }],
-                "Tags": [
-                    {
-                        "Key": "Name",
-                        "Value": {
-                            "Fn::Join": [
-                                "-",
-                                [
-                                    {
-                                        "Ref": "AWS::StackName"
-                                    },
-                                    "couchbase-server"
-                                ]
+                "Tags": [{
+                    "Key": "Name",
+                    "Value": {
+                        "Fn::Join": [
+                            "-", [{
+                                    "Ref": "AWS::StackName"
+                                },
+                                "couchbase-server"
                             ]
-                        },
-                        "PropagateAtLaunch": "true"
-                    }
-                ]
+                        ]
+                    },
+                    "PropagateAtLaunch": "true"
+                }]
             }
         },
         "ServerLaunchConfiguration": {
@@ -305,23 +335,19 @@
                 }, {
                     "Ref": "PublicSubnet2ID"
                 }],
-                "Tags": [
-                    {
-                        "Key": "Name",
-                        "Value": {
-                            "Fn::Join": [
-                                "-",
-                                [
-                                    {
-                                        "Ref": "AWS::StackName"
-                                    },
-                                    "couchbase-sync-gateway"
-                                ]
+                "Tags": [{
+                    "Key": "Name",
+                    "Value": {
+                        "Fn::Join": [
+                            "-", [{
+                                    "Ref": "AWS::StackName"
+                                },
+                                "couchbase-sync-gateway"
                             ]
-                        },
-                        "PropagateAtLaunch": "true"
-                    }
-                ]
+                        ]
+                    },
+                    "PropagateAtLaunch": "true"
+                }]
             }
         },
         "SyncGatewayLaunchConfiguration": {
@@ -476,6 +502,16 @@
                         "Ref": "VPCCIDR"
                     }
                 }]
+            }
+        }
+    },
+    "Outputs": {
+        "URL": {
+            "Description": "The URL of the website",
+            "Value": {
+                "Fn::Join": ["", ["http://", {
+                    "Fn::GetAtt": ["CouchbaseELB", "DNSName"]
+                }, ":8091"]]
             }
         }
     }
