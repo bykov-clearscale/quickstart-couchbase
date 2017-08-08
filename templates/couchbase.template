@@ -204,14 +204,18 @@
                 "Listeners": [{
                     "LoadBalancerPort": "8091",
                     "InstancePort": "8091",
-                    "Protocol": "HTTP"
+                    "Protocol": "HTTP",
+                    "PolicyNames": [
+                        "LBCookieStickinessPolicy"
+                    ]
                 }],
                 "SecurityGroups": [{
                     "Ref": "CouchbaseSecurityGroup"
                 }],
-                "AppCookieStickinessPolicy": [{
-                    "CookieName": "couchbaseserver",
-                    "PolicyName": "WorkloadCookieStickinessPolicy"
+
+                "LBCookieStickinessPolicies": [{
+                    "CookieExpirationPeriod": "60",
+                    "PolicyName": "LBCookieStickinessPolicy"
                 }],
                 "HealthCheck": {
                     "Target": "HTTP:8091/ui/index.html",
