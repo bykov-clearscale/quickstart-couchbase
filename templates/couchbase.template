@@ -136,6 +136,20 @@
             "Description": "The CIDR IP range that is permitted to access the instances We recommend that you set this value to a trusted IP range.",
             "Type": "String"
         },
+        "QSS3BucketName": {
+            "AllowedPattern": "^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$",
+            "ConstraintDescription": "Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-).",
+            "Default": "quickstart-reference",
+            "Description": "S3 bucket name for the Quick Start assets. This string can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-).",
+            "Type": "String"
+        },
+        "QSS3KeyPrefix": {
+            "AllowedPattern": "^[0-9a-zA-Z-/]*$",
+            "ConstraintDescription": "Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/).",
+            "Default": "couchbase/latest/",
+            "Description": "S3 key prefix for the Quick Start assets. Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/).",
+            "Type": "String"
+        },
         "VPCID": {
             "Description": "VPC ID",
             "Type": "AWS::EC2::VPC::Id"
@@ -192,6 +206,15 @@
             }
         }
     },
+    "Conditions": {
+        "GovCloudCondition": {
+            "Fn::Equals": [{
+                    "Ref": "AWS::Region"
+                },
+                "us-gov-west-1"
+            ]
+        }
+    },
     "Resources": {
         "CouchbaseELB": {
             "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
@@ -206,16 +229,24 @@
                     "InstancePort": "8091",
                     "Protocol": "HTTP",
                     "PolicyNames": [
-                        "LBCookieStickinessPolicy"
+                        "AppStickinessPolicy"
                     ]
                 }],
+                "Policies": [
+
+                    {
+                        "PolicyName": "AppStickinessPolicy",
+                        "PolicyType": "AppCookieStickinessPolicyType",
+                        "Attributes": [{
+                            "Name": "CookieName",
+                            "Value": {
+                                "Ref": "AWS::StackName"
+                            }
+                        }]
+                    }
+                ],
                 "SecurityGroups": [{
                     "Ref": "CouchbaseSecurityGroup"
-                }],
-
-                "LBCookieStickinessPolicies": [{
-                    "CookieExpirationPeriod": "60",
-                    "PolicyName": "LBCookieStickinessPolicy"
                 }],
                 "HealthCheck": {
                     "Target": "HTTP:8091/ui/index.html",
@@ -307,7 +338,21 @@
                             "adminPassword=", {
                                 "Ref": "Password"
                             }, "\n",
-                            "baseURL=https://raw.githubusercontent.com/aws-quickstart/quickstart-couchbase/master/scripts/\n",
+                            "baseURL=", {
+                                "Fn::Sub": [
+                                    "https://${QSS3BucketName}.${S3Region}.amazonaws.com/${QSS3KeyPrefix}", {
+                                        "S3Region": {
+                                            "Fn::If": [
+                                                "GovCloudCondition",
+                                                "s3-us-gov-west-1",
+                                                "s3"
+                                            ]
+                                        }
+                                    }
+                                ]
+                            },
+                            "scripts/",
+                            "\n",
                             "wget ${baseURL}server.sh\n",
                             "wget ${baseURL}format.sh\n",
                             "wget ${baseURL}installServer.sh\n",
@@ -380,7 +425,21 @@
                         "Fn::Join": ["", [
                             "#!/bin/bash\n",
                             "echo 'Running startup script...'\n",
-                            "baseURL=https://raw.githubusercontent.com/aws-quickstart/quickstart-couchbase/master/scripts/\n",
+                            "baseURL=", {
+                                "Fn::Sub": [
+                                    "https://${QSS3BucketName}.${S3Region}.amazonaws.com/${QSS3KeyPrefix}", {
+                                        "S3Region": {
+                                            "Fn::If": [
+                                                "GovCloudCondition",
+                                                "s3-us-gov-west-1",
+                                                "s3"
+                                            ]
+                                        }
+                                    }
+                                ]
+                            },
+                            "scripts/",
+                            "\n",
                             "wget ${baseURL}syncGateway.sh\n",
                             "wget ${baseURL}installSyncGateway.sh\n",
                             "wget ${baseURL}configureSyncGateway.sh\n",

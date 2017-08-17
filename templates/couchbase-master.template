@@ -140,6 +140,12 @@
                     "KeyName": {
                         "Ref": "KeyPairName"
                     },
+                    "QSS3BucketName": {
+                        "Ref": "QSS3BucketName"
+                    },
+                    "QSS3KeyPrefix": {
+                        "Ref": "QSS3KeyPrefix"
+                    },
                     "PublicSubnet1ID": {
                         "Fn::GetAtt": [
                             "VPCStack",
