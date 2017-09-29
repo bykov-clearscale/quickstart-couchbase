@@ -9,9 +9,9 @@
                 },
                 "Parameters": [
                     "VPCID",
-                    "PublicSubnet1ID",
-                    "PublicSubnet2ID",
-                    "RemoteAccessCIDR",
+                    "PrivateSubnet1ID",
+                    "PrivateSubnet2ID",
+                    "RemoteAccessGroup",
                     "VPCID",
                     "VPCCIDR"
                 ]
@@ -21,7 +21,8 @@
                 },
                 "Parameters": [
                     "KeyName",
-                    "InstanceType"
+                    "InstanceType",
+                    "EncryptEBS"
                 ]
             }, {
                 "Label": {
@@ -45,20 +46,20 @@
             }],
             "ParameterLabels": {
 
-                "PublicSubnet1ID": {
-                    "default": "Public Subnet 1 ID"
+                "PrivateSubnet1ID": {
+                    "default": "Private Subnet 1 ID"
                 },
-                "PublicSubnet2ID": {
-                    "default": "Public Subnet 2 ID"
+                "PrivateSubnet2ID": {
+                    "default": "Private Subnet 2 ID"
                 },
                 "QSS3BucketName": {
-                    "defauS3BucketNamelt": "Quick Start S3 Bucket Name"
+                    "default": "Quick Start S3 Bucket Name"
                 },
                 "QSS3KeyPrefix": {
                     "default": "Quick Start S3 Key Prefix"
                 },
-                "RemoteAccessCIDR": {
-                    "default": "Allowed External Access CIDR"
+                "RemoteAccessGroup": {
+                    "default": "Allowed External Access Security Group"
                 },
                 "VPCID": {
                     "default": "VPC ID"
@@ -109,6 +110,15 @@
                 "m4.xlarge"
             ]
         },
+        "EncryptEBS": {
+            "Description": "Encrypt EBS volume",
+            "Type": "String",
+            "Default": "false",
+            "AllowedValues": [
+                "true",
+                "false"
+            ]
+        },
         "Username": {
             "Description": "Username for Couchbase administrator",
             "Type": "String"
@@ -122,19 +132,31 @@
             "Description": "Name of an existing EC2 KeyPair",
             "Type": "AWS::EC2::KeyPair::KeyName"
         },
-        "PublicSubnet1ID": {
+        "PrivateSubnet1ID": {
             "Description": "ID of the public subnet 1 in Availability Zone 1 (e.g., subnet-xxxxxxxx)",
             "Type": "AWS::EC2::Subnet::Id"
         },
-        "PublicSubnet2ID": {
+        "PrivateSubnet2ID": {
             "Description": "ID of the public subnet 2 in Availability Zone 2 (e.g., subnet-xxxxxxxx)",
             "Type": "AWS::EC2::Subnet::Id"
         },
-        "RemoteAccessCIDR": {
-            "AllowedPattern": "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/([0-9]|[1-2][0-9]|3[0-2]))$",
-            "ConstraintDescription": "CIDR block parameter must be in the form x.x.x.x/x",
-            "Description": "The CIDR IP range that is permitted to access the instances We recommend that you set this value to a trusted IP range.",
+        "QSS3BucketName": {
+            "AllowedPattern": "^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$",
+            "ConstraintDescription": "Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-).",
+            "Default": "quickstart-reference",
+            "Description": "S3 bucket name for the Quick Start assets. This string can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-).",
             "Type": "String"
+        },
+        "QSS3KeyPrefix": {
+            "AllowedPattern": "^[0-9a-zA-Z-/]*$",
+            "ConstraintDescription": "Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/).",
+            "Default": "couchbase/latest/",
+            "Description": "S3 key prefix for the Quick Start assets. Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/).",
+            "Type": "String"
+        },
+        "RemoteAccessGroup": {
+            "Description": "Security group ID that is permitted to access the instances.",
+            "Type": "AWS::EC2::SecurityGroup::Id"
         },
         "VPCID": {
             "Description": "VPC ID",
@@ -149,46 +171,60 @@
     "Mappings": {
         "CouchbaseAMI": {
             "us-east-1": {
-                "AMI": "ami-c58c1dd3"
+                "Server": "ami-48f6d033",
+                "Gateway": "ami-9cf7d1e7"
             },
             "us-east-2": {
-                "AMI": "ami-4191b524"
+                "Server": "ami-2fe2c24a",
+                "Gateway": "ami-141f3f71"
             },
             "us-west-1": {
-                "AMI": "ami-7a85a01a"
+                "Server": "ami-92a48cf2",
+                "Gateway": "ami-7ca58d1c"
             },
             "us-west-2": {
-                "AMI": "ami-4836a428"
+                "Server": "ami-4ac92e32",
+                "Gateway": "ami-57d6312f"
             },
             "ca-central-1": {
-                "AMI": "ami-0bd66a6f"
+                "Server": "ami-98ee50fc",
+                "Gateway": "ami-23ed5347"
             },
             "eu-central-1": {
-                "AMI": "ami-b968bad6"
+                "Server": "ami-f761ce98",
+                "Gateway": "ami-fa62cd95"
             },
             "eu-west-1": {
-                "AMI": "ami-01ccc867"
+                "Server": "ami-e4ee1a9d",
+                "Gateway": "ami-20ee1a59"
             },
             "eu-west-2": {
-                "AMI": "ami-b6daced2"
+                "Server": "ami-c82736ac",
+                "Gateway": "ami-c12839a5"
             },
             "ap-southeast-1": {
-                "AMI": "ami-fc5ae39f"
+                "Server": "ami-536af530",
+                "Gateway": "ami-206af543"
             },
             "ap-southeast-2": {
-                "AMI": "ami-162c2575"
+                "Server": "ami-4a948a29",
+                "Gateway": "ami-00968863"
             },
             "ap-south-1": {
-                "AMI": "ami-52c7b43d"
+                "Server": "ami-87bdc6e8",
+                "Gateway": "ami-5dbec532"
             },
             "ap-northeast-1": {
-                "AMI": "ami-923d12f5"
+                "Server": "ami-07da3461",
+                "Gateway": "ami-e5df3183"
             },
             "ap-northeast-2": {
-                "AMI": "ami-9d15c7f3"
+                "Server": "ami-0de53c63",
+                "Gateway": "ami-f6e23b98"
             },
             "sa-east-1": {
-                "AMI": "ami-37cfad5b"
+                "Server": "ami-301f695c",
+                "Gateway": "ami-4d1e6821"
             }
         }
     },
@@ -209,10 +245,17 @@
                     "Ref": "ServerInstanceCount"
                 },
                 "VPCZoneIdentifier": [{
-                    "Ref": "PublicSubnet1ID"
+                    "Ref": "PrivateSubnet1ID"
                 }, {
-                    "Ref": "PublicSubnet2ID"
-                }]
+                    "Ref": "PrivateSubnet2ID"
+                }],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "CouchbaseServer",
+                        "PropagateAtLaunch": "true"
+                    }
+                ]
             }
         },
         "ServerLaunchConfiguration": {
@@ -221,7 +264,7 @@
                 "ImageId": {
                     "Fn::FindInMap": ["CouchbaseAMI", {
                         "Ref": "AWS::Region"
-                    }, "AMI"]
+                    }, "Server"]
                 },
                 "InstanceType": {
                     "Ref": "InstanceType"
@@ -239,6 +282,9 @@
                 "BlockDeviceMappings": [{
                     "DeviceName": "/dev/sdk",
                     "Ebs": {
+                        "Encrypted": {
+                            "Ref": "EncryptEBS"
+                        },
                         "VolumeSize": {
                             "Ref": "ServerDiskSize"
                         },
@@ -256,10 +302,9 @@
                             "adminPassword=", {
                                 "Ref": "Password"
                             }, "\n",
-                            "baseURL=https://raw.githubusercontent.com/aws-quickstart/quickstart-couchbase/master/scripts/\n",
+                            "baseURL=", { "Fn::Sub": "https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}scripts/" },"\n",
                             "wget ${baseURL}server.sh\n",
                             "wget ${baseURL}format.sh\n",
-                            "wget ${baseURL}installServer.sh\n",
                             "wget ${baseURL}configureServer.sh\n",
                             "chmod +x *.sh\n",
                             "./server.sh ${adminUsername} ${adminPassword}\n"
@@ -284,10 +329,17 @@
                     "Ref": "SyncGatewayInstanceCount"
                 },
                 "VPCZoneIdentifier": [{
-                    "Ref": "PublicSubnet1ID"
+                    "Ref": "PrivateSubnet1ID"
                 }, {
-                    "Ref": "PublicSubnet2ID"
-                }]
+                    "Ref": "PrivateSubnet2ID"
+                }],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "CouchbaseSynGateway",
+                        "PropagateAtLaunch": "true"
+                    }
+                ]
             }
         },
         "SyncGatewayLaunchConfiguration": {
@@ -296,7 +348,7 @@
                 "ImageId": {
                     "Fn::FindInMap": ["CouchbaseAMI", {
                         "Ref": "AWS::Region"
-                    }, "AMI"]
+                    }, "Gateway"]
                 },
                 "InstanceType": {
                     "Ref": "InstanceType"
@@ -316,9 +368,8 @@
                         "Fn::Join": ["", [
                             "#!/bin/bash\n",
                             "echo 'Running startup script...'\n",
-                            "baseURL=https://raw.githubusercontent.com/aws-quickstart/quickstart-couchbase/master/scripts/\n",
+                            "baseURL=", { "Fn::Sub": "https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}scripts/" },"\n",
                             "wget ${baseURL}syncGateway.sh\n",
-                            "wget ${baseURL}installSyncGateway.sh\n",
                             "wget ${baseURL}configureSyncGateway.sh\n",
                             "chmod +x *.sh\n",
                             "./syncGateway.sh\n"
@@ -375,64 +426,64 @@
                     "IpProtocol": "tcp",
                     "FromPort": 22,
                     "ToPort": 22,
-                    "CidrIp": {
-                        "Ref": "RemoteAccessCIDR"
+                    "SourceSecurityGroupId": {
+                        "Ref": "RemoteAccessGroup"
                     }
                 }, {
                     "IpProtocol": "tcp",
                     "FromPort": 4369,
                     "ToPort": 4369,
-                    "CidrIp": {
-                        "Ref": "RemoteAccessCIDR"
+                    "SourceSecurityGroupId": {
+                        "Ref": "RemoteAccessGroup"
                     }
                 }, {
                     "IpProtocol": "tcp",
                     "FromPort": 4984,
                     "ToPort": 4985,
-                    "CidrIp": {
-                        "Ref": "RemoteAccessCIDR"
+                    "SourceSecurityGroupId": {
+                        "Ref": "RemoteAccessGroup"
                     }
                 }, {
                     "IpProtocol": "tcp",
                     "FromPort": 8091,
                     "ToPort": 8094,
-                    "CidrIp": {
-                        "Ref": "RemoteAccessCIDR"
+                    "SourceSecurityGroupId": {
+                        "Ref": "RemoteAccessGroup"
                     }
                 }, {
                     "IpProtocol": "tcp",
                     "FromPort": 9100,
                     "ToPort": 9105,
-                    "CidrIp": {
-                        "Ref": "RemoteAccessCIDR"
+                    "SourceSecurityGroupId": {
+                        "Ref": "RemoteAccessGroup"
                     }
                 }, {
                     "IpProtocol": "tcp",
                     "FromPort": 9998,
                     "ToPort": 9999,
-                    "CidrIp": {
-                        "Ref": "RemoteAccessCIDR"
+                    "SourceSecurityGroupId": {
+                        "Ref": "RemoteAccessGroup"
                     }
                 }, {
                     "IpProtocol": "tcp",
                     "FromPort": 11207,
                     "ToPort": 11215,
-                    "CidrIp": {
-                        "Ref": "RemoteAccessCIDR"
+                    "SourceSecurityGroupId": {
+                        "Ref": "RemoteAccessGroup"
                     }
                 }, {
                     "IpProtocol": "tcp",
                     "FromPort": 18091,
                     "ToPort": 18093,
-                    "CidrIp": {
-                        "Ref": "RemoteAccessCIDR"
+                    "SourceSecurityGroupId": {
+                        "Ref": "RemoteAccessGroup"
                     }
                 }, {
                     "IpProtocol": "tcp",
                     "FromPort": 21100,
                     "ToPort": 21299,
-                    "CidrIp": {
-                        "Ref": "RemoteAccessCIDR"
+                    "SourceSecurityGroupId": {
+                        "Ref": "RemoteAccessGroup"
                     }
                 }, {
                     "IpProtocol": "tcp",

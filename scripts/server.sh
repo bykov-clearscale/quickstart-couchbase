@@ -9,6 +9,5 @@ echo "Using the settings:"
 echo adminUsername \'$adminUsername\'
 echo adminPassword \'$adminPassword\'
 
-./installServer.sh
 ./format.sh
 ./configureServer.sh $adminUsername $adminPassword

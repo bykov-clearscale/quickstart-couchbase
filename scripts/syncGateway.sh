@@ -2,5 +2,4 @@
 
 echo "Running syncGateway.sh"
 
-./installSyncGateway.sh
 ./configureSyncGateway.sh

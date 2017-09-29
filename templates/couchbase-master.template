@@ -1,6 +1,100 @@
 {
     "AWSTemplateFormatVersion": "2010-09-09",
     "Description": "Couchbase + QuickStart VPC (Master Template)",
+    "Metadata": {
+        "AWS::CloudFormation::Interface": {
+            "ParameterGroups": [
+            {
+                "Label": {
+                    "default": "Network Configuration (new VPC)"
+                },
+                "Parameters": [
+                    "AvailabilityZones",
+                    "PrivateSubnet1CIDR",
+                    "PrivateSubnet2CIDR",
+                    "PublicSubnet1CIDR",
+                    "PublicSubnet2CIDR",
+                    "RemoteAccessCIDR",
+                    "VPCCIDR"
+                ]
+            }, 
+            {
+                "Label": {
+                    "default": "Amazon EC2 Configuration"
+                },
+                "Parameters": [
+                    "KeyName",
+                    "InstanceType"
+                ]
+            }, {
+                "Label": {
+                    "default": "Couchbase Configuration"
+                },
+                "Parameters": [
+                    "Username",
+                    "Password",
+                    "ServerDiskSize",
+                    "ServerInstanceCount",
+                    "SyncGatewayInstanceCount",
+                    "EncryptEBS",
+                    "KeyPairName"
+                ]
+            }, {
+                "Label": {
+                    "default": "AWS Quick Start Configuration"
+                },
+                "Parameters": [
+                    "QSS3BucketName",
+                    "QSS3KeyPrefix"
+                ]
+            }],
+            "ParameterLabels": {
+                "PrivateSubnet1CIDR": {
+                    "default": "Private Subnet 1 CIDR"
+                },
+                "PrivateSubnet2CIDR": {
+                    "default": "Private Subnet 2 CIDR"
+                },
+                "PublicSubnet1CIDR": {
+                    "default": "Public Subnet 1 CIDR"
+                },
+                "PublicSubnet2CIDR": {
+                    "default": "Public Subnet 2 CIDR"
+                },
+                "QSS3BucketName": {
+                    "default": "Quick Start S3 Bucket Name"
+                },
+                "QSS3KeyPrefix": {
+                    "default": "Quick Start S3 Key Prefix"
+                },
+                "RemoteAccessCIDR": {
+                    "default": "Allowed External Access CIDR"
+                },
+                "KeyName": {
+                    "default": "SSH Key Name"
+                },
+                "Username": {
+                    "default": "Couchbase Administrator Username"
+                },
+                "Password": {
+                    "default": "Couchbase Administrator Password"
+                },
+                "InstanceType": {
+                    "default": "Couchbase Instance Type"
+                },
+
+                "ServerInstanceCount": {
+                    "default": "Couchbase Instance Count"
+                },
+                "SyncGatewayInstanceCount": {
+                    "default": "Number of Couchbase Sync Gateway Nodes"
+                },
+                "EncryptEBS": {
+                    "default": "Encrypt Instance EBS"
+                }
+            }
+        }
+    },
     "Parameters": {
         "AvailabilityZones": {
             "Description": "List of Availability Zones to use for the subnets in the VPC. Only two Availability Zones are used for this deployment, and the logical order of your selections is preserved.",
@@ -33,6 +127,15 @@
                 "m4.xlarge"
             ]
         },
+        "EncryptEBS": {
+            "Description": "If EBS volume should be encrypted",
+            "Type": "String",
+            "Default": "false",
+            "AllowedValues": [
+                "true",
+                "false"
+            ]
+        },
         "Username": {
             "Description": "Username for Couchbase administrator",
             "Type": "String"
@@ -41,6 +144,20 @@
             "Description": "Password for Couchbase administrator",
             "Type": "String",
             "NoEcho": true
+        },
+        "PrivateSubnet1CIDR": {
+            "AllowedPattern": "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/(1[6-9]|2[0-8]))$",
+            "ConstraintDescription": "CIDR block parameter must be in the form x.x.x.x/16-28",
+            "Default": "10.0.160.0/20",
+            "Description": "CIDR block for the private subnet 1 located in Availability Zone 1",
+            "Type": "String"
+        },
+        "PrivateSubnet2CIDR": {
+            "AllowedPattern": "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/(1[6-9]|2[0-8]))$",
+            "ConstraintDescription": "CIDR block parameter must be in the form x.x.x.x/16-28",
+            "Default": "10.0.176.0/20",
+            "Description": "CIDR block for the private subnet 2 located in Availability Zone 2",
+            "Type": "String"
         },
         "PublicSubnet1CIDR": {
             "AllowedPattern": "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/(1[6-9]|2[0-8]))$",
@@ -102,6 +219,12 @@
                     "KeyPairName": {
                         "Ref": "KeyPairName"
                     },
+                    "PrivateSubnet1ACIDR": {
+                        "Ref": "PrivateSubnet1CIDR"
+                    },
+                    "PrivateSubnet2ACIDR": {
+                        "Ref": "PrivateSubnet2CIDR"
+                    },
                     "PublicSubnet1CIDR": {
                         "Ref": "PublicSubnet1CIDR"
                     },
@@ -111,7 +234,42 @@
                     "VPCCIDR": {
                         "Ref": "VPCCIDR"
                     },
+                    "CreatePrivateSubnets": "true",
                     "NumberOfAZs": "2"
+                }
+            }
+        },
+        "BastionStack": {
+            "Type": "AWS::CloudFormation::Stack",
+            "Properties": {
+                "TemplateURL": {
+                    "Fn::Sub": "https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-linux-bastion/templates/linux-bastion.template"
+                },
+                "Parameters": {
+                    "KeyPairName": {
+                        "Ref": "KeyPairName"
+                    },
+                    "PublicSubnet1ID": {
+                        "Fn::GetAtt": [
+                            "VPCStack",
+                            "Outputs.PublicSubnet1ID"
+                        ]
+                    },
+                    "PublicSubnet2ID": {
+                        "Fn::GetAtt": [
+                            "VPCStack",
+                            "Outputs.PublicSubnet2ID"
+                        ]
+                    },
+                    "RemoteAccessCIDR": {
+                        "Ref": "RemoteAccessCIDR"
+                    },
+                    "VPCID": {
+                        "Fn::GetAtt": [
+                            "VPCStack",
+                            "Outputs.VPCID"
+                        ]
+                    }
                 }
             }
         },
@@ -134,26 +292,41 @@
                     "ServerInstanceCount": {
                         "Ref": "ServerInstanceCount"
                     },
+                    "SyncGatewayInstanceCount": {
+                        "Ref": "SyncGatewayInstanceCount"
+                    },
                     "InstanceType": {
                         "Ref": "InstanceType"
+                    },
+                    "EncryptEBS": {
+                        "Ref": "EncryptEBS"
                     },
                     "KeyName": {
                         "Ref": "KeyPairName"
                     },
-                    "PublicSubnet1ID": {
+                    "PrivateSubnet1ID": {
                         "Fn::GetAtt": [
                             "VPCStack",
-                            "Outputs.PublicSubnet1ID"
+                            "Outputs.PrivateSubnet1AID"
                         ]
-                    },
-                    "PublicSubnet2ID": {
+                     },
+                    "PrivateSubnet2ID": {
                         "Fn::GetAtt": [
                             "VPCStack",
-                            "Outputs.PublicSubnet2ID"
+                            "Outputs.PrivateSubnet2AID"
                         ]
+                     },
+                    "QSS3BucketName": {
+                        "Ref": "QSS3BucketName"
                     },
-                    "RemoteAccessCIDR": {
-                        "Ref": "RemoteAccessCIDR"
+                    "QSS3KeyPrefix": {
+                        "Ref": "QSS3KeyPrefix"
+                    },
+                    "RemoteAccessGroup": {
+                        "Fn::GetAtt": [
+                            "BastionStack",
+                            "Outputs.BastionSecurityGroupID"
+                        ]
                     },
                     "VPCCIDR": {
                         "Ref": "VPCCIDR"

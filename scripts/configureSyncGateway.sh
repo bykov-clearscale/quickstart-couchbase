@@ -29,7 +29,7 @@ rallyInstanceID=`echo ${autoscalingGroupInstanceIDs} | cut -d " " -f1`
 
 rallyPublicDNS=$(aws ec2 describe-instances \
     --region ${region} \
-    --query  'Reservations[0].Instances[0].NetworkInterfaces[0].Association.PublicDnsName' \
+    --query  'Reservations[0].Instances[0].NetworkInterfaces[0].PrivateDnsName' \
     --instance-ids ${rallyInstanceID} \
     --output text)
 echo rallyPublicDNS ${rallyPublicDNS}
