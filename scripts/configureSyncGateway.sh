@@ -9,7 +9,7 @@ region=$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/documen
   | jq '.region'  \
   | sed 's/^"\(.*\)"$/\1/' )
 
-rallyInstanceID=$(aws ec2 describe-instances --filters "Name=tag:rally,Values=true")
+rallyInstanceID=$(aws ec2 describe-instances --filters "Name=tag:rally,Values=true" --query  'Reservations[0].Instances[0].InstanceId' --output text)
 
 rallyPublicDNS=$(aws ec2 describe-instances \
     --region ${region} \
