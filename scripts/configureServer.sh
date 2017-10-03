@@ -89,6 +89,9 @@ then
     --bucket=sync_gateway \
     --bucket-type=couchbase \
     --bucket-ramsize=$dataRAM
+
+    echo "Creating tag for rally instance"
+    aws ec2 create-tags --resources $rallyInstanceID --tags Key=rally,Value=true
 else
   echo "Running couchbase-cli server-add"
   output=""
