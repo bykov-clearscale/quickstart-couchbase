@@ -345,7 +345,7 @@
                 "Tags": [
                     {
                         "Key": "Name",
-                        "Value": "CouchbaseSynGateway",
+                        "Value": "CouchbaseSyncGateway",
                         "PropagateAtLaunch": "true"
                     }
                 ]
