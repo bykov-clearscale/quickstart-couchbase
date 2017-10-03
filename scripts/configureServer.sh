@@ -41,7 +41,7 @@ rallyPublicDNS=$(aws ec2 describe-instances \
     --output text)
 echo rallyPublicDNS ${rallyPublicDNS}
 
-nodePublicDNS=`curl http://169.254.169.254/latest/meta-data/public-hostname`
+nodePublicDNS=`curl http://169.254.169.254/latest/meta-data/local-hostname`
 
 echo "Using the settings:"
 echo adminUsername \'$adminUsername\'
