@@ -23,8 +23,7 @@
                 },
                 "Parameters": [
                     "KeyName",
-                    "InstanceType",
-                    "EncryptEBS"
+                    "InstanceType"
                 ]
             }, {
                 "Label": {
@@ -35,7 +34,9 @@
                     "Password",
                     "ServerDiskSize",
                     "ServerInstanceCount",
-                    "SyncGatewayInstanceCount"
+                    "SyncGatewayInstanceCount",
+                    "EncryptEBS",
+                    "License"
                 ]
             }, {
                 "Label": {
