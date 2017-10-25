@@ -204,12 +204,12 @@
         },
         "PublicSubnet3CIDR": {
             "Default": "",
-            "Description": "CIDR block for the public subnet 1 located in Availability Zone 3 (if required)",
+            "Description": "CIDR block for the public subnet 3 located in Availability Zone 3 (if required)",
             "Type": "String"
         },
         "PublicSubnet4CIDR": {
             "Default": "",
-            "Description": "CIDR block for the public subnet 2 located in Availability Zone 4 (if required)",
+            "Description": "CIDR block for the public subnet 4 located in Availability Zone 4 (if required)",
             "Type": "String"
         },
         "QSS3BucketName": {
